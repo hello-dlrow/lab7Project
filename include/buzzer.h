@@ -97,5 +97,6 @@ const int buzzerPin = 4;
 
 
 void playMario();
+void play8BitTune();
 
 #endif

@@ -1,5 +1,7 @@
 #include "buzzer.h"
 
+extern const int buzzerPin;
+
 int melody[] = {
   NOTE_E5, NOTE_E5, 0, NOTE_E5,
   0, NOTE_C5, NOTE_E5, 0,
@@ -41,6 +43,56 @@ int noteDurations[] = {
   8, 8, 8, 8,
   4, 8, 8, 8
 };
+
+
+
+// 音符和时长定义
+int songNotes[] = {
+  NOTE_C4, NOTE_E4, NOTE_G4, NOTE_C5, 0, NOTE_B4, NOTE_A4
+};
+
+int songDurations[] = {
+  4, 8, 8, 4, 4, 4, 4
+};
+
+// 控制变量
+int noteIndex = 0;
+unsigned long lastUpdate = 0;
+int duration = 0;
+bool playing = false;
+
+// 播放音乐的函数
+void play8BitTune() {
+  unsigned long now = millis();
+
+  // 如果当前没有播放音符并且仍有音符需要播放
+  if (!playing && noteIndex < (sizeof(songNotes) / sizeof(songNotes[0]))) {
+    // 计算音符的时长
+    duration = (1000 / songDurations[noteIndex]) * 1.5; // 包括音符间隔
+    lastUpdate = now;
+
+    // 播放当前音符，如果是 0 则保持静音
+    if (songNotes[noteIndex] != 0) {
+      tone(buzzerPin, songNotes[noteIndex]);
+    } else {
+      noTone(buzzerPin);
+    }
+
+    playing = true; // 标记音符正在播放
+  }
+
+  // 如果音符播放完成
+  if (playing && (now - lastUpdate >= duration)) {
+    noTone(buzzerPin); // 停止音符
+    noteIndex++;        // 跳到下一个音符
+    playing = false;    // 重置播放状态
+  }
+
+  // 如果播放完成一轮，重置索引以循环播放
+  if (noteIndex >= (sizeof(songNotes) / sizeof(songNotes[0]))) {
+    noteIndex = 0;
+  }
+}
 
 
 void playMario() {
