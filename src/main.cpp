@@ -9,19 +9,24 @@ unsigned long pulseInTime2;
 unsigned long lastTime2;
 bool newPulse2 = false;
 
-// PID相关变量
-double lastTimePid;
-double currentTimePid;
-double startTimePid = 0;
-float rotateSpeed;
-unsigned int yawRef = 45;
-unsigned int yawDiff;
-float maxRotateSpeed = 0;
-float minRotateSpeed = 0;
+
 
 // 设置PID；
-PID pid(0.03, 0.004, 0);
+PID pid(0.6, 0, 0.4);
+double setpoint = 0;
 
+double delta_t = 0;
+double cur_start = 0;
+double cur_end = 0;
+
+double error = 0;
+double output = 0;
+
+//串口通讯
+bool stringComplete;
+ String str;
+
+//mpu6050
 MPU6050 myMPUData;
 MotorOutput myMotor = {0};
 
@@ -53,8 +58,51 @@ void setup() {
 }
 
 void loop() {
-  calculateRotateSpeed(&myMotor, 0, 0);
+  
+  while (Serial.available()) {
+    char inChar = (char)Serial.read();
+
+    if (inChar == '\n') {
+      stringComplete = true;
+    } 
+    else {
+      str += inChar;
+    }
+  }
+
+  if (stringComplete) {
+    str.trim();
+    error = str.toDouble();
+    Serial.println(error);
+    str = "";
+    stringComplete = false;
+  }
+
+  
+
+  cur_end = micros();
+
+  //delta_t = 0.18 s
+  delta_t = (cur_end - cur_start) / 1000;
+
+  output = pid.compute(setpoint, error, delta_t);
+  cur_start = micros();
+  
+  calculateRotateSpeed(&myMotor, output, 50);
+  #if 0
+  Serial.print("left");
+  Serial.println(myMotor.leftRotate);
+  Serial.print("right");
+  Serial.println(myMotor.rightRotate);
+  #endif
   startMotor(&myMotor);
+  #if 0
+  Serial.print("left");
+  Serial.println(myMotor.leftRotate);
+  Serial.print("right");
+  Serial.println(myMotor.rightRotate);
+  #endif
+
 #if 0
 	if (newPulse1)
 	{
@@ -124,6 +172,7 @@ void loop() {
 		Serial.println(myMotor.direction);
 #endif
 
+#if 0
   readMP6050(&myMPUData);
 
   // apply filter
@@ -137,6 +186,7 @@ void loop() {
                            myMPUData.gyroAngleY, K1, K2);
   myMPUData.yaw = update(myMPUData.yaw, 0, myMPUData.gyroAngleZ, 0,
                          0.05); // no accAngle for yaw meansurement
+#endif
 
 #if 0
   Serial.print("rotateSpeed:");

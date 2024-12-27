@@ -35,7 +35,7 @@ struct MotorOutput {
 // deadzone deafault 10
 // pwm output from 0 ~ 1
 void calculateDifferentialDrive(MotorOutput *myMotor);
-void calculateRotateSpeed(MotorOutput *myMotor, int8_t w, uint8_t v);
+void calculateRotateSpeed(MotorOutput *myMotor, double w, double v);
 
 void startMotor(MotorOutput *myMotor);
 

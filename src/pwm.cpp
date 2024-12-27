@@ -6,18 +6,19 @@
 // 假设轮距是1
 // leftRotate通过油门控制量，油门实际控制加速度，但是这里假设是速度
 // 油门最大值和线速度保持一致
-void calculateRotateSpeed(MotorOutput *myMotor, int8_t w, uint8_t v) {
+void calculateRotateSpeed(MotorOutput *myMotor, double w, double v) {
   // leftRotate, rightRotate (-100 ~ 100)
-  int8_t leftRotate = v - w / 2;
-  int8_t rightRotate = v + w / 2;
+  double left = v - w / 2;
+  double right = v + w / 2;
 
-  myMotor->leftRotate = leftRotate > 100    ? 100
-                        : leftRotate < -100 ? -100
-                                            : leftRotate;
-
-  myMotor->rightRotate = rightRotate > 100    ? 100
-                         : rightRotate < -100 ? -100
-                                              : rightRotate;
+  myMotor->leftRotate = left > 100 ? 100 : (left < -100 ? -100 : left);                                
+  myMotor->rightRotate = right > 100 ? 100 : (right < -100 ? -100 : right);
+  #if 0
+  Serial.print("left");
+  Serial.println(myMotor->leftRotate);
+  Serial.print("right");
+  Serial.println(myMotor->rightRotate);
+  #endif
 }
 
 // 差速转向计算函数
@@ -80,21 +81,32 @@ void startMotor(MotorOutput *myMotor) {
 void startMotor(MotorOutput *myMotor) {
   // 定义方向
   if (myMotor->leftRotate < 0) {
-    digitalWrite(15, HIGH);
-    digitalWrite(16, LOW);
-  } else if (myMotor->leftRotate > 0) {
-    digitalWrite(15, LOW);
-    digitalWrite(16, HIGH);
-  }
-
-  if (myMotor->rightRotate > 0) {
-    digitalWrite(7, LOW);
-    digitalWrite(8, HIGH);
-
-  } else if (myMotor->rightRotate < 0) {
     digitalWrite(7, HIGH);
     digitalWrite(8, LOW);
   }
+  if (myMotor->leftRotate > 0) {
+    digitalWrite(7, LOW);
+    digitalWrite(8, HIGH);
+    Serial.println("forward");
+  }
+
+  if (myMotor->rightRotate > 0) {
+    digitalWrite(15, LOW);
+    digitalWrite(16, HIGH);
+
+  } 
+  if (myMotor->rightRotate < 0) {
+    digitalWrite(15, HIGH);
+    digitalWrite(16, LOW);
+  }
+
+
+  #if 0
+  Serial.print("left");
+  Serial.println(myMotor->leftRotate);
+  Serial.print("right");
+  Serial.println(myMotor->rightRotate);
+  #endif
 
   analogWrite(LEFT_PWM_OUTPUT_PIN,
               map(abs(myMotor->leftRotate), 0, 100, 0, 255));
